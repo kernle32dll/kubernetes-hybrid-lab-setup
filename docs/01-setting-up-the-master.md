@@ -187,7 +187,7 @@ each package.
 ```shell script
 pacstrap /mnt base uboot-raspberrypi linux-aarch64 firmware-raspberrypi raspberrypi-bootloader-x uboot-tools \ 
 mkinitcpio-systemd-tool tinyssh-convert tinyssh busybox btrfs-progs cryptsetup \ 
-openssh dhcpcd openntpd htop lm_sensors nano zsh zsh-completions grml-zsh-config \ 
+sudo openssh dhcpcd openntpd htop lm_sensors nano zsh zsh-completions grml-zsh-config \ 
 docker cni-plugins conntrack-tools ethtool ebtables socat
 ```
 
@@ -211,13 +211,14 @@ remote LUKS unlocking via tinyssh (don't worry - you can always unlock
 with a keyboard connected to the Pi too, if something goes wrong)
 
 ```
-openssh dhcpcd openntpd htop lm_sensors nano zsh zsh-completions grml-zsh-config 
+sudo openssh dhcpcd openntpd htop lm_sensors nano zsh zsh-completions grml-zsh-config 
 ```
 
-Personal choice for packages I like. `openssh` server makes administration much easier,
-and as I use dhcp in my network, `dhcpcd` is pretty much required. `openntpd` is a
-simple implementation of a `ntp` sync client, to keep the system clock in sync (the Pi
-does not have a hardware clock!).
+Personal choice for packages I like. `sudo` allows us to use a dedicated user instead
+of using the root user directly (there is a good reason for that down the line),
+`openssh` server makes administration much easier, and as I use dhcp in my network,
+`dhcpcd` is pretty much required. `openntpd` is a simple implementation of a `ntp`
+sync client, to keep the system clock in sync (the Pi does not have a hardware clock!).
 
 The rest of these packages are completely personal choices, and can be substituted at
 will. The rest of the document will assume these however, so adjust as necessary.
@@ -293,7 +294,7 @@ passwd root
 #echo "root:rootpw" | chpasswd
 ```
 
-While we are at it, we will create a dedicated used, with ´sudo´ privileges:
+While we are at it, we will create a dedicated used, with `sudo` privileges:
 
 ```shell script
 useradd --shell $(which zsh) --create-home alarm
