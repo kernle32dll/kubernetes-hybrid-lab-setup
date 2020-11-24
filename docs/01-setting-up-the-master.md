@@ -219,8 +219,14 @@ and as I use dhcp in my network, `dhcpcd` is pretty much required. `openntpd` is
 simple implementation of a `ntp` sync client, to keep the system clock in sync (the Pi
 does not have a hardware clock!).
 
-The rest of the packages are completely personal choices, and can be substituted at
+The rest of these packages are completely personal choices, and can be substituted at
 will. The rest of the document will assume these however, so adjust as necessary.
+
+```
+docker cni-plugins conntrack-tools ethtool ebtables socat 
+```
+
+These packages are required for Kubernetes (or to be more precise, `kubeadm`) to run. 
 
 ### 3: Configure the system in chroot
 
