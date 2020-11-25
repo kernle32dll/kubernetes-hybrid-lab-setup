@@ -476,11 +476,11 @@ That's what the second line with `--ignore-preflight-errors=SystemVerification` 
 However, first try to init without it, to catch any other problem that might exist.
 
 ```shell script
-kubeadm init --pod-network-cidr=10.244.0.0/16
+kubeadm init --control-plane-endpoint claystone-master1 --pod-network-cidr=10.244.0.0/16
 
 # Check without ignore-preflight-errors first. If you ONLY get
 # the btrfs error, proceed.
-kubeadm init --pod-network-cidr=10.244.0.0/16 --ignore-preflight-errors=SystemVerification 
+kubeadm init --control-plane-endpoint claystone-master1 --pod-network-cidr=10.244.0.0/16 --ignore-preflight-errors=SystemVerification 
 
 # https://blog.nobugware.com/post/2019/bare-metal-kubernetes-quick-installations-on-arch/
 # In short: arch linux installs its cni stuff into /usr/lib/cni/ instead of /opt/cni/bin/
@@ -499,6 +499,21 @@ ln -s /opt/cni/bin/weave-net /usr/lib/cni/weave-net
 
 kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')&env.NO_MASQ_LOCAL=1"
 ```
+
+Some further notes about the commands above:
+
+The `--control-plane-endpoint` parameter for `kubeadm init` serves as preparation
+for elevating the master setup to a HA cluster later down the line. As noted by the
+kubeadm docs: You cannot upgrade the master setup to a cluster later, if you don't
+specify the `control-plane-endpoint` **now**. It is possible to change the value
+later, but it must be set now.
+
+As hinted by the comment above, there is a slight difference where the cni binaries
+are put on arch linux. This is easily addressed by changing the kubeadm env file
+after init.
+
+I decided to go with weave for the pod network add-on. There is no specific reason for
+it, other than it known to play well with both ARM and x86. 
 
 ## Finish
 
