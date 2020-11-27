@@ -96,7 +96,8 @@ reboot
 The reboot is required, as it might happen that your kernel is not the most recent
 at time of booting the system. What this entails is that the btrfs modules get
 installed into the most recent kernel module folder, and not the running kernel.
-This causes following commands to fail. So its best to reboot now, so you are all set.
+This causes following btrfs related commands to fail. So its best to reboot now,
+so you are all set.
 
 ## Bootstrapping the actual system
 
@@ -514,6 +515,14 @@ after init.
 
 I decided to go with weave for the pod network add-on. There is no specific reason for
 it, other than it known to play well with both ARM and x86. 
+
+```shell script
+mkdir -p ${fpath[1]}
+kubeadm completion zsh > "${fpath[1]}/_kubeadm"
+kubectl completion zsh > "${fpath[1]}/_kubectl"
+```
+
+For good measure, I also installed ZSH shell completion. This is optional.
 
 ## Finish
 
