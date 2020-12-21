@@ -57,10 +57,10 @@ case `nano`) than the default `vi`.
 First, we get the image, and set up our SD card. The process is outlined nicely
 [here](https://archlinuxarm.org/platforms/armv8/broadcom/raspberry-pi-4).
 
-Annoyingly, the default installation media does not per default contain or
-enable an SSH server. You can either boot up the image with keyboard and
-display attached once, and enable it via `systemctl enable dhcpcd`, or you can
-do it the smart way:
+While it might not be an issue for some people - for me it is pretty annoying
+that the default installation media has DHCP disabled. You can either boot up
+the image with keyboard and display attached once, and enable and start it via
+`systemctl enable dhcpcd --now`, or you can do it the smart way:
 
 While still having the prepared SD card in your computer, mount the second partition
 (root partition, not boot), and `ln` the ssh server service. The latter is basically
@@ -71,12 +71,13 @@ In my case, the SD card is at `/dev/sdd` - adjust accordingly!
 ```shell script
 mnt /dev/sdd2 /mnt
 mkdir -p /mnt/etc/systemd/system/multi-user.target.wants
-ln -s /usr/lib/systemd/system/sshd.service /mnt/etc/systemd/system/multi-user.target.wants/
+ln -s /usr/lib/systemd/system/dhcpcd.service /mnt/etc/systemd/system/multi-user.target.wants/
 umount /mnt
 ```
 
-We will use a more elegant solution for the worker, but for now, this is how
-it goes for the master installation.
+We will use a more elegant solution to prepare the installation medium with more
+customization possibilities for the worker, but for now, this is how it goes for
+the master installation.
 
 Now, insert the SD card into the Pi, and boot into the system. We will first make
 sure it is up to date (important for btrfs, more on this later), as well as
