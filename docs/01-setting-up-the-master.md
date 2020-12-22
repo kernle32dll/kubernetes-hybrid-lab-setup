@@ -81,7 +81,12 @@ the master installation.
 
 Now, insert the SD card into the Pi, and boot into the system. We will first make
 sure it is up to date (important for btrfs, more on this later), as well as
-installing a few more tools we will need later:
+installing a few more tools we will need later.
+
+Note, you can log in as `alarm` or `root` (password is the same as the username).
+For SSH, you can only log in as `alarm`. The following commands assume root level
+privileges, so if you did that, don't forget to execute `su` to switch to the
+root user.
 
 ```shell script
 pacman-key --init
