@@ -365,8 +365,8 @@ you don't have one or want to use a dedicated one, create it now **on your host 
 and `cat` the public key, so we can install it manually on our new system:
 
 ```shell script
-ssh-keygen -t rsa -b 4096 -a 100 -f ~/.ssh/ida_rsa_claystone_master_unlock
-cat ~/.ssh/ida_rsa_claystone_master_unlock.pub
+ssh-keygen -t ed25519 -b 4096 -a 100 -f ~/.ssh/ida_ed25519_claystone_master_unlock
+cat ~/.ssh/ida_ed25519_claystone_master_unlock.pub
 ```
 
 Back in our new system, add the public key retrieved from the `cat` command above (your
