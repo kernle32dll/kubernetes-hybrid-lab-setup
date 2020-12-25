@@ -323,8 +323,8 @@ unlock the encrypted root partition, as well as some other shenanigans.
 # /usr/lib/libgcc_s.so.1 is required for ssh cryptsetup 
 sed -i "s/BINARIES=()/BINARIES=(\/usr\/bin\/btrfs \/usr\/lib\/libgcc_s.so.1)/" /etc/mkinitcpio.conf
 
-# Load USB (pcie_brcmstb) and ethernet (broadcom) modules for recovery and remote unlock
-sed -i "s/MODULES=()/MODULES=(broadcom pcie_brcmstb)/" /etc/mkinitcpio.conf
+# Load USB (pcie_brcmstb) and ethernet (genet broadcom) modules for recovery and remote unlock
+sed -i "s/MODULES=()/MODULES=(genet broadcom pcie_brcmstb)/" /etc/mkinitcpio.conf
 
 # Add correct keymap and encryption, and add support for seperate /usr partition
 sed -i 's/keyboard fsck/keyboard keymap systemd systemd-tool usr fsck/' /etc/mkinitcpio.conf
