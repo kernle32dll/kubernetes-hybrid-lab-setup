@@ -501,18 +501,19 @@ kubeadm config images pull
 Finally, we are ready to create our cluster, and do some preliminary configuration.
 
 ```shell script
-cat >> k8s-init-config.cfg <<END
+cat > k8s-init-config.cfg <<END
 apiVersion: kubeadm.k8s.io/v1beta2
 kind: InitConfiguration
-nodeRegistration:
-  kubeletExtraArgs:
-    cgroup-driver: systemd
 ---
 apiVersion: kubeadm.k8s.io/v1beta2
 kind: ClusterConfiguration
 controlPlaneEndpoint: claystone-master1
 networking:
   podSubnet: 10.244.0.0/16
+---
+apiVersion: kubelet.config.k8s.io/v1beta1
+kind: KubeletConfiguration
+cgroupDriver: systemd
 END
 
 kubeadm init --config k8s-init-config.cfg
@@ -536,6 +537,11 @@ setup to a HA cluster later down the line. As noted by the kubeadm docs: You can
 upgrade the master setup to a cluster later, if you don't  specify the
 `controlPlaneEndpoint` **now**. It is possible to _change_ the value later, but it
 must be set now.
+
+If not using `Docker` as the container runtime, extra care must be taken that the correct
+cgroup is used. For `Docker` it can me detected automatically, but for `containerd` and
+others, it needs to be explicitly set to `systemd`. You might remember something about
+cgroups and systemd during the `containerd` configuration.
 
 I decided to go with `weave` for the pod network add-on. There is no specific reason for
 it, other than it known to play well with both ARM and x86. 
