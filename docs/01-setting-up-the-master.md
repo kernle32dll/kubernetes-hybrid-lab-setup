@@ -195,7 +195,7 @@ each package.
 pacstrap /mnt base uboot-raspberrypi linux-aarch64 firmware-raspberrypi raspberrypi-bootloader-x uboot-tools \ 
 mkinitcpio-systemd-tool tinyssh-convert tinyssh busybox btrfs-progs cryptsetup \ 
 sudo openssh dhcpcd openntpd htop lm_sensors nano zsh zsh-completions grml-zsh-config \ 
-docker cni-plugins conntrack-tools ethtool ebtables socat
+containerd cni-plugins conntrack-tools ethtool ebtables socat
 ```
 
 Lets break down the packages, while they get installed onto your Pi (it may take a
@@ -231,7 +231,7 @@ The rest of these packages are completely personal choices, and can be substitut
 will. The rest of the document will assume these however, so adjust as necessary.
 
 ```
-docker cni-plugins conntrack-tools ethtool ebtables socat 
+containerd cni-plugins conntrack-tools ethtool ebtables socat 
 ```
 
 These packages are required for Kubernetes (or to be more precise, `kubeadm`) to run. 
@@ -271,28 +271,50 @@ cat >> /etc/hosts <<END
 END
 ```
 
-Now is also the time to do some config for Kubernetes and Docker. This could be done
+Now is also the time to do some config for Kubernetes and containerd. This could be done
 later, but its convenient to do this in chroot, as the services are not running yet.
 
 ```shell script
-cat <<EOF | tee /etc/sysctl.d/k8s.conf
+cat <<EOF | tee /etc/sysctl.d/99-kubernetes-cri.conf
+net.ipv4.ip_forward = 1
 net.bridge.bridge-nf-call-ip6tables = 1
 net.bridge.bridge-nf-call-iptables = 1
 EOF
 sysctl --system
 
-mkdir /etc/docker/
-cat > /etc/docker/daemon.json <<EOF
-{
-  "exec-opts": ["native.cgroupdriver=systemd"]
-}
+cat <<EOF | tee /etc/modules-load.d/containerd.conf
+overlay
+br_netfilter
 EOF
+
+# Not necessary if you are still in chroot like this guide says
+# If you repeat the steps while in the final system, execute these two:
+modprobe overlay
+modprobe br_netfilter
+
+# Add containerd default config and adjust systemd stuff
+mkdir -p /etc/containerd
+containerd config default | tee /etc/containerd/config.toml
+
+# https://blog.nobugware.com/post/2019/bare-metal-kubernetes-quick-installations-on-arch/
+# In short: arch linux installs its cni stuff into /usr/lib/cni/ instead of /opt/cni/bin/
+sed -i 's/bin_dir = "\/opt\/cni\/bin"/bin_dir = "\/usr\/lib\/cni"/' /etc/containerd/config.toml
+```
+
+Additionally, you need to set the system cgroup for containerd to `systemd`. At the time of
+writing, I could not come up with a good way to do this easily, so you must do that manually.
+
+`nano /etc/containerd/config.toml`, and add the `SystemdCgroup` parameter under the right block:
+
+```shell script
+[plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc.options]
+  SystemdCgroup = true
 ```
 
 Next baby step - enable required services, and set a new `root` password.
 
 ```shell script
-systemctl enable sshd dhcpcd docker openntpd
+systemctl enable sshd dhcpcd containerd openntpd
 
 chsh --shell $(which zsh)
 passwd root
@@ -458,42 +480,42 @@ sudo su
 DOWNLOAD_DIR=/usr/local/bin
 mkdir -p $DOWNLOAD_DIR
 
+CRICTL_VERSION="v1.19.0"
+curl -L "https://github.com/kubernetes-sigs/cri-tools/releases/download/${CRICTL_VERSION}/crictl-${CRICTL_VERSION}-linux-arm64.tar.gz" | sudo tar -C $DOWNLOAD_DIR -xz
+
 RELEASE="$(curl -sSL https://dl.k8s.io/release/stable.txt)"
 cd $DOWNLOAD_DIR
 curl -L --remote-name-all https://storage.googleapis.com/kubernetes-release/release/${RELEASE}/bin/linux/arm64/{kubeadm,kubelet,kubectl}
 chmod +x {kubeadm,kubelet,kubectl}
 
 RELEASE_VERSION="v0.4.0"
-curl -sSL "https://raw.githubusercontent.com/kubernetes/release/${RELEASE_VERSION}/cmd/kubepkg/templates/latest/deb/kubelet/lib/systemd/system/kubelet.service" | sed "s:/usr/bin:${DOWNLOAD_DIR}:g" | tee /etc/systemd/system/kubelet.service
+curl -sSL "https://raw.githubusercontent.com/kubernetes/release/${RELEASE_VERSION}/cmd/kubepkg/templates/latest/deb/kubelet/lib/systemd/system/kubelet.service" | sed "s:/usr/bin:${DOWNLOAD_DIR}:g" | tee /usr/lib/systemd/system/kubelet.service
 mkdir -p /etc/systemd/system/kubelet.service.d
 curl -sSL "https://raw.githubusercontent.com/kubernetes/release/${RELEASE_VERSION}/cmd/kubepkg/templates/latest/deb/kubeadm/10-kubeadm.conf" | sed "s:/usr/bin:${DOWNLOAD_DIR}:g" | tee /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
 
-systemctl enable kubelet
-systemctl start kubelet
+systemctl enable kubelet --now
 
 kubeadm config images pull
 ```
 
-Finally, we are ready to create our cluster. But first, we need to talk about a known
-problem.
-
-When you execute `kubeadm init --pod-network-cidr=10.244.0.0/16`, it will fail. It will
-fail, because `btrfs` is not officially supported. I ignored it, and went ahead anyway.
-That's what the second line with `--ignore-preflight-errors=SystemVerification` is for.
-However, first try to init without it, to catch any other problem that might exist.
+Finally, we are ready to create our cluster, and do some preliminary configuration.
 
 ```shell script
-kubeadm init --control-plane-endpoint claystone-master1 --pod-network-cidr=10.244.0.0/16
+cat >> k8s-init-config.cfg <<END
+apiVersion: kubeadm.k8s.io/v1beta2
+kind: InitConfiguration
+nodeRegistration:
+  kubeletExtraArgs:
+    cgroup-driver: systemd
+---
+apiVersion: kubeadm.k8s.io/v1beta2
+kind: ClusterConfiguration
+controlPlaneEndpoint: claystone-master1
+networking:
+  podSubnet: 10.244.0.0/16
+END
 
-# Check without ignore-preflight-errors first. If you ONLY get
-# the btrfs error, proceed.
-kubeadm init --control-plane-endpoint claystone-master1 --pod-network-cidr=10.244.0.0/16 --ignore-preflight-errors=SystemVerification 
-
-# https://blog.nobugware.com/post/2019/bare-metal-kubernetes-quick-installations-on-arch/
-# In short: arch linux installs its cni stuff into /usr/lib/cni/ instead of /opt/cni/bin/
-sed -i "s/--network-plugin=cni/--network-plugin=cni --cni-bin-dir=\/usr\/lib\/cni/" /var/lib/kubelet/kubeadm-flags.env
-
-systemctl restart kubelet
+kubeadm init --config k8s-init-config.cfg
 
 # Persist kubectl config
 mkdir -p $HOME/.kube
@@ -507,19 +529,15 @@ ln -s /opt/cni/bin/weave-net /usr/lib/cni/weave-net
 kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')&env.NO_MASQ_LOCAL=1"
 ```
 
-Some further notes about the commands above:
+Some further notes about the config above:
 
-The `--control-plane-endpoint` parameter for `kubeadm init` serves as preparation
-for elevating the master setup to a HA cluster later down the line. As noted by the
-kubeadm docs: You cannot upgrade the master setup to a cluster later, if you don't
-specify the `control-plane-endpoint` **now**. It is possible to change the value
-later, but it must be set now.
+The `controlPlaneEndpoint` config serves as preparation  for elevating the master
+setup to a HA cluster later down the line. As noted by the kubeadm docs: You cannot
+upgrade the master setup to a cluster later, if you don't  specify the
+`controlPlaneEndpoint` **now**. It is possible to _change_ the value later, but it
+must be set now.
 
-As hinted by the comment above, there is a slight difference where the cni binaries
-are put on arch linux. This is easily addressed by changing the kubeadm env file
-after init.
-
-I decided to go with weave for the pod network add-on. There is no specific reason for
+I decided to go with `weave` for the pod network add-on. There is no specific reason for
 it, other than it known to play well with both ARM and x86. 
 
 ```shell script
@@ -534,8 +552,11 @@ For good measure, I also installed ZSH shell completion. This is optional.
 
 Congratulations, you successfully installed your first Kubernetes cluster with a single
 master on your Raspberry Pi! What a ride. Take some depth breaths, and play around a bit
-with your new cluster. E.g. execute `kubectl get pods -A` to see whats running behind the
+with your new cluster. E.g. execute `kubectl get pods -A` to see what's running behind the
 scenes.
 
 If you are ready, we will do pretty much the same again, with some important twists, in
-the next step - where we setup the worker, so we can actually deploy something on our cluster.
+the next step - where we set up the worker, so we can actually deploy something on our cluster.
+
+If you need to set up your Kubernetes cluster anew, just issue `kubeadm reset`, and you
+can start over gain.
