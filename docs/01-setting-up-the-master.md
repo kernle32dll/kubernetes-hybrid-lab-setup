@@ -523,6 +523,10 @@ mkdir -p $HOME/.kube
 cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
 chown $(id -u):$(id -g) $HOME/.kube/config
 
+# Tell crictl that we are using containerd
+export CONTAINER_RUNTIME_ENDPOINT="unix:///run/containerd/containerd.sock"
+echo "export CONTAINER_RUNTIME_ENDPOINT=\"unix:///run/containerd/containerd.sock\"" >> /root/.zshrc
+
 # weave insists on getting installed into /opt/cni/bin/
 # make a link into /usr/lib/cni/
 ln -s /opt/cni/bin/weave-net /usr/lib/cni/weave-net
