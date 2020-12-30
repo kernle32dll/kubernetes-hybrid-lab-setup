@@ -15,6 +15,6 @@ server as the worker.
 
 ## Sections
 
-- 00: Hard- and software decisions
+- 00: [Hard- and software decisions](./docs/00-hardware-software-decisions.md)
 - 01: [Setting up the master](./docs/01-setting-up-the-master.md)
 - 02: Setting up the worker
