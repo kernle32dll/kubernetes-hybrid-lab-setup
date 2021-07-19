@@ -581,3 +581,42 @@ the next step - where we set up the worker, so we can actually deploy something 
 
 If you need to set up your Kubernetes cluster anew, just issue `kubeadm reset`, and you
 can start over gain.
+
+## Bonus: Overclocking
+
+*Note*: The following is based on [this MagPi](https://magpi.raspberrypi.org/articles/how-to-overclock-raspberry-pi-4])
+article. Give it a read if you want a bit more details.
+
+Now that you got your Pi running, it's time to give it a bit more juice. If you followed my
+[hardware decisions](./00-hardware-software-decisions.md) along, you are good to go. If not, make **absolutely sure**,
+that you have adequate cooling before continuing!
+
+**Disclaimer**: Overclocking is on you - I don't take any responsibility for any damages done!
+
+If you have not installed the `raspberrypi-firmware` package during pacstrap time - now is the time.
+
+When installed, you get (amongst other things) access to the `vcgencmd` command, which allows you to inspect properties
+about the Pi. The two most interesting commands are as follows:
+
+```shell
+# Measures the current clock speed of the CPU - ~1500000000 is normal top-clock
+/opt/vc/bin/vcgencmd measure_clock arm
+```
+
+```shell
+# Measures the current CPU temperature - for my setup its ~30°C during idle.
+/opt/vc/bin/vcgencmd measure_temp
+```
+
+Now, to actually overclock the Pi, we need to adjust the `confix.txt`. If our setup, it resides at `/boot/config.txt`.
+
+Either as root or via `sudo`, add the following lines to crank it up a good bit:
+
+```text
+over_voltage=6
+arm_freq=2000
+```
+
+Reboot the Pi and - voilà. Enjoy your overclocked Pi. Make sure to check temperatures and clock, to see if everything is
+working fine. You might want to experiment (**carefully**) a bit, to see if you can push the clock a bit further, but
+the 2ghz above very pretty safe for *me*.
