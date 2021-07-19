@@ -194,20 +194,24 @@ each package.
 ```shell script
 pacstrap /mnt base uboot-raspberrypi linux-aarch64 firmware-raspberrypi raspberrypi-bootloader-x uboot-tools \ 
 mkinitcpio-systemd-tool tinyssh-convert tinyssh busybox btrfs-progs cryptsetup \ 
-sudo openssh dhcpcd openntpd htop lm_sensors nano zsh zsh-completions grml-zsh-config \ 
-containerd cni-plugins conntrack-tools ethtool ebtables socat
+sudo openssh dhcpcd openntpd htop lm_sensors nano zsh zsh-completions grml-zsh-config dnsutils \ 
+containerd cni-plugins conntrack-tools ethtool ebtables socat \ 
+raspberrypi-firmware
 ```
 
 Lets break down the packages, while they get installed onto your Pi (it may take a
 good while):
 
 ```
-base uboot-raspberrypi linux-aarch64 firmware-raspberrypi raspberrypi-bootloader-x uboot-tools
+base raspberrypi-firmware uboot-raspberrypi linux-aarch64 firmware-raspberrypi raspberrypi-bootloader-x uboot-tools
 ```
 
 These are the base files, which are always required. Kudos to `ptanmay143` for
 [figuring these out](https://www.reddit.com/r/archlinuxarm/comments/harxbk/how_to_build_archlinuxarm_rpi3_tarballs/fv8loy2/).
 `uboot-tools` is required for regenerating the U-Boot bootloader down the line.
+
+Note, that we are using the mainline kernel `linux-aarch64`, and not the Raspberry Pi
+specific kernel `linux-raspberrypi4`.
 
 ```
 mkinitcpio-systemd-tool tinyssh-convert tinyssh busybox btrfs-progs cryptsetup
@@ -218,7 +222,7 @@ remote LUKS unlocking via tinyssh (don't worry - you can always unlock
 with a keyboard connected to the Pi too, if something goes wrong)
 
 ```
-sudo openssh dhcpcd openntpd htop lm_sensors nano zsh zsh-completions grml-zsh-config 
+sudo openssh dhcpcd openntpd htop lm_sensors nano zsh zsh-completions grml-zsh-config dnsutils
 ```
 
 Personal choice for packages I like. `sudo` allows us to use a dedicated user instead
@@ -235,6 +239,13 @@ containerd cni-plugins conntrack-tools ethtool ebtables socat
 ```
 
 These packages are required for Kubernetes (or to be more precise, `kubeadm`) to run. 
+
+```
+raspberrypi-firmware
+```
+
+Lastly, this is an optional package (not to be confused with `firmware-raspberrypi`), which
+contains some handy tools, such as `vcgencmd`.
 
 ### 3: Configure the system in chroot
 
@@ -480,7 +491,7 @@ sudo su
 DOWNLOAD_DIR=/usr/local/bin
 mkdir -p $DOWNLOAD_DIR
 
-CRICTL_VERSION="v1.19.0"
+CRICTL_VERSION="v1.21.0"
 curl -L "https://github.com/kubernetes-sigs/cri-tools/releases/download/${CRICTL_VERSION}/crictl-${CRICTL_VERSION}-linux-arm64.tar.gz" | sudo tar -C $DOWNLOAD_DIR -xz
 
 RELEASE="$(curl -sSL https://dl.k8s.io/release/stable.txt)"
