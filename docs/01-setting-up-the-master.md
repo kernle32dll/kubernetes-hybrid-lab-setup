@@ -193,10 +193,10 @@ each package.
 
 ```shell script
 pacstrap /mnt base uboot-raspberrypi linux-aarch64 firmware-raspberrypi raspberrypi-bootloader-x uboot-tools \ 
-mkinitcpio-systemd-tool tinyssh-convert tinyssh busybox btrfs-progs cryptsetup \ 
+mkinitcpio-systemd-tool python tinyssh busybox btrfs-progs cryptsetup \ 
 sudo openssh dhcpcd openntpd htop lm_sensors nano zsh zsh-completions grml-zsh-config dnsutils \ 
 containerd cni-plugins conntrack-tools ethtool ebtables socat \ 
-raspberrypi-firmware
+raspberrypi-firmware rpi-eeprom
 ```
 
 Lets break down the packages, while they get installed onto your Pi (it may take a
@@ -214,7 +214,7 @@ Note, that we are using the mainline kernel `linux-aarch64`, and not the Raspber
 specific kernel `linux-raspberrypi4`.
 
 ```
-mkinitcpio-systemd-tool tinyssh-convert tinyssh busybox btrfs-progs cryptsetup
+mkinitcpio-systemd-tool python tinyssh busybox btrfs-progs cryptsetup
 ```
 
 These are required for the init stage of the system, where we will implement
@@ -241,11 +241,12 @@ containerd cni-plugins conntrack-tools ethtool ebtables socat
 These packages are required for Kubernetes (or to be more precise, `kubeadm`) to run. 
 
 ```
-raspberrypi-firmware
+raspberrypi-firmware rpi-eeprom
 ```
 
-Lastly, this is an optional package (not to be confused with `firmware-raspberrypi`), which
-contains some handy tools, such as `vcgencmd`.
+Lastly, these are two optional packages. The former (not to be confused with`firmware-raspberrypi`) contains some handy
+tools, such as `vcgencmd` (see `Update bootloader` paragraph wat the top). `rpi-eeprom` contains the actual tools
+to update the firmware (which is stored on the eeprom, hence the name).
 
 ### 3: Configure the system in chroot
 
@@ -491,7 +492,7 @@ sudo su
 DOWNLOAD_DIR=/usr/local/bin
 mkdir -p $DOWNLOAD_DIR
 
-CRICTL_VERSION="v1.21.0"
+CRICTL_VERSION="v1.23.0"
 curl -L "https://github.com/kubernetes-sigs/cri-tools/releases/download/${CRICTL_VERSION}/crictl-${CRICTL_VERSION}-linux-arm64.tar.gz" | sudo tar -C $DOWNLOAD_DIR -xz
 
 RELEASE="$(curl -sSL https://dl.k8s.io/release/stable.txt)"
