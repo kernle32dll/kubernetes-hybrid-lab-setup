@@ -125,8 +125,8 @@ First, we wipe the partition table, and create our partitions as needed:
 wipefs -a -f /dev/sda
 
 parted /dev/sda mklabel msdos
-parted /dev/sda mkpart primary fat32 1MB 200MB
-parted /dev/sda mkpart primary btrfs 200MB 100%
+parted /dev/sda mkpart primary fat32 1MB 512MB
+parted /dev/sda mkpart primary btrfs 512MB 100%
 ```
 
 Next, we create our file systems. This also entails LUKS encrypting the root
