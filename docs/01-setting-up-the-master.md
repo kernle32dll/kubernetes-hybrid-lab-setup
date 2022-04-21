@@ -191,7 +191,7 @@ the result is very rewarding, as we can install and customize the system down to
 each package.
 
 ```shell script
-pacstrap /mnt base uboot-raspberrypi linux-aarch64 firmware-raspberrypi raspberrypi-bootloader-x uboot-tools \ 
+pacstrap /mnt base uboot-raspberrypi linux-aarch64 firmware-raspberrypi raspberrypi-bootloader uboot-tools \ 
 mkinitcpio-systemd-tool python tinyssh busybox btrfs-progs cryptsetup \ 
 sudo openssh dhcpcd openntpd htop lm_sensors nano zsh zsh-completions grml-zsh-config dnsutils \ 
 containerd cni-plugins conntrack-tools ethtool ebtables socat \ 
@@ -202,7 +202,7 @@ Lets break down the packages, while they get installed onto your Pi (it may take
 good while):
 
 ```
-base raspberrypi-firmware uboot-raspberrypi linux-aarch64 firmware-raspberrypi raspberrypi-bootloader-x uboot-tools
+base raspberrypi-firmware uboot-raspberrypi linux-aarch64 firmware-raspberrypi raspberrypi-bootloader uboot-tools
 ```
 
 These are the base files, which are always required. Kudos to `ptanmay143` for
