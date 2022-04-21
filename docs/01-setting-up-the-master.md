@@ -80,7 +80,7 @@ customization possibilities for the worker, but for now, this is how it goes for
 the master installation.
 
 Now, insert the SD card into the Pi, and boot into the system. We will first make
-sure it is up to date (important for btrfs, more on this later), as well as
+sure it is up-to-date (important for btrfs, more on this later), as well as
 installing a few more tools we will need later.
 
 Note, you can log in as `alarm` or `root` (password is the same as the username).
@@ -102,12 +102,12 @@ reboot
 The reboot is required, as it might happen that your kernel is not the most recent
 at time of booting the system. What this entails is that the btrfs modules get
 installed into the most recent kernel module folder, and not the running kernel.
-This causes following btrfs related commands to fail. So its best to reboot now,
+This causes following btrfs related commands to fail. So it's best to reboot now,
 so you are all set.
 
 ## Bootstrapping the actual system
 
-Now with our bootstrapping system up and running, its time to bootstrap the final
+Now with our bootstrapping system up and running, It's time to bootstrap the final
 system.
 
 SSH into the system, and for the following commands **ALWAYS** make sure you
@@ -180,13 +180,13 @@ mkdir /mnt/boot
 mount /dev/sda1 /mnt/boot
 ```
 
-We are now ready to setup the system!
+We are now ready to set up the system!
 
 ### 2: Install the system
 
 Arch Linux - in any architecture - contains a very cool tool to bootstrap (or how
 its called here - `pacstrap`) a new system. As outlined at the beginning of this
-document, its a bit of a hassle to pull of with the Raspberry Pi. However, I think
+document, it's a bit of a hassle to pull of with the Raspberry Pi. However, I think
 the result is very rewarding, as we can install and customize the system down to
 each package.
 
@@ -198,7 +198,7 @@ containerd cni-plugins conntrack-tools ethtool ebtables socat \
 raspberrypi-firmware rpi-eeprom
 ```
 
-Lets break down the packages, while they get installed onto your Pi (it may take a
+Let's break down the packages, while they get installed onto your Pi (it may take a
 good while):
 
 ```
@@ -217,7 +217,7 @@ mkinitcpio-systemd-tool python tinyssh busybox btrfs-progs cryptsetup
 ```
 
 These are required for the init stage of the system, where we will implement
-remote LUKS unlocking via tinyssh (don't worry - you can always unlock
+remote LUKS unlocking via `tinyssh` (don't worry - you can always unlock
 with a keyboard connected to the Pi too, if something goes wrong)
 
 ```
@@ -243,7 +243,7 @@ raspberrypi-firmware rpi-eeprom
 ```
 
 Lastly, these are two optional packages. The former (not to be confused with`firmware-raspberrypi`) contains some handy
-tools, such as `vcgencmd` (see `Update bootloader` paragraph wat the top). `rpi-eeprom` contains the actual tools
+tools, such as `vcgencmd` (see `Update bootloader` paragraph at the top). `rpi-eeprom` contains the actual tools
 to update the firmware (which is stored on the eeprom, hence the name).
 
 ### 3: Configure the system in chroot
@@ -261,7 +261,7 @@ Note: Substitute or omit `zsh` in `arch-chroot` with the shell of your desire.
 
 Now we start with some basic system configuration. Check the official
 [Arch Linux install guide](https://wiki.archlinux.org/index.php/Installation_guide) guide to
-adjust these as required. These commands as-is setup a US-English system, with a
+adjust these as required. These commands as-is set up a US-English system, with a
 German QWERTZ keymap and timezone. For me, my master will be called `claystone-master1`,
 and the hostname will be set accordingly.
 
@@ -294,7 +294,7 @@ timedatectl set-ntp 1
 ```
 
 Now is also the time to do some config for Kubernetes and containerd. This could be done
-later, but its convenient to do this in chroot, as the services are not running yet.
+later, but It's convenient to do this in chroot, as the services are not running yet.
 
 ```shell script
 cat <<EOF | tee /etc/sysctl.d/99-kubernetes-cri.conf
@@ -342,7 +342,7 @@ passwd root
 #echo "root:rootpw" | chpasswd
 ```
 
-While we are at it, we will create a dedicated used, with `sudo` privileges:
+While we are at it, we will create a dedicated user, with `sudo` privileges:
 
 ```shell script
 useradd --shell $(which zsh) --create-home alarm
@@ -430,7 +430,7 @@ are converted and copied into the tinyssh config while building the initramfs.
 ssh-keygen -A
 ```
 
-With the configuration complete, its now time to regenerate our initramfs. This will
+With the configuration complete, it's now time to regenerate our initramfs. This will
 take some time, and should finish without any error. Ignore warnings regarding missing
 firmwares - this is completely normal, and can be ignored on the Pi.
 
@@ -478,9 +478,9 @@ Note: `claystone-master1` is a fixed dns entry pointing to my Pi. Adjust accordi
 on your end.
 
 If you were unable to unlock the system via SSH, or cannot SSH into the system afterwards,
-double check the steps above. You can at any time revert to using the bootstrap system in
+double-check the steps above. You can at any time revert to using the bootstrap system in
 the SD slot, and your target system in the USB adapter, setting up the mounts again, and
-chrooting into the system again. If nothing helps, just start over at the `wipefs` step.
+chroot'ing into the system again. If nothing helps, just start over at the `wipefs` step.
 
 ## Installing Kubernetes
 
@@ -627,4 +627,4 @@ arm_freq=2000
 
 Reboot the Pi and - voilà. Enjoy your overclocked Pi. Make sure to check temperatures and clock, to see if everything is
 working fine. You might want to experiment (**carefully**) a bit, to see if you can push the clock a bit further, but
-the 2ghz above very pretty safe for *me*.
+the 2ghz above are very pretty safe for *me*.
