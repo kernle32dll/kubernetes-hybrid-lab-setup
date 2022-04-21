@@ -346,7 +346,7 @@ passwd alarm
 
 usermod --append --groups wheel alarm
 
-sed -i "s/# %wheel ALL=(ALL) ALL/%wheel ALL=(ALL) ALL/" /etc/sudoers
+sed -i "s/# %wheel ALL=(ALL:ALL) ALL/%wheel ALL=(ALL:ALL) ALL/" /etc/sudoers
 ```
 
 The last step to finish the preliminary setup is to configure our init process, so we can
