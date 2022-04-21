@@ -94,7 +94,7 @@ pacman-key --populate archlinuxarm
 
 # Update system and reboot
 # (required, or btrfs module might not load)
-pacman -Syu parted dosfstools arch-install-scripts btrfs-progs
+pacman -Syu gptfdisk dosfstools arch-install-scripts btrfs-progs
 
 reboot
 ```
@@ -124,9 +124,8 @@ First, we wipe the partition table, and create our partitions as needed:
 ```shell script
 wipefs -a -f /dev/sda
 
-parted /dev/sda mklabel msdos
-parted /dev/sda mkpart primary fat32 1MB 512MB
-parted /dev/sda mkpart primary btrfs 512MB 100%
+sgdisk -n 0:0:+512MB -c 0:"Arch Boot" -t 0:0700 /dev/sda
+sgdisk -n 0:0:0 -c 0:"Arch Root" -t 0:8300 /dev/sda
 ```
 
 Next, we create our file systems. This also entails LUKS encrypting the root
