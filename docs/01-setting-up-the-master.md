@@ -323,14 +323,11 @@ containerd config default | tee /etc/containerd/config.toml
 sed -i 's/bin_dir = "\/opt\/cni\/bin"/bin_dir = "\/usr\/lib\/cni"/' /etc/containerd/config.toml
 ```
 
-Additionally, you need to set the system cgroup for containerd to `systemd`. At the time of
-writing, I could not come up with a good way to do this easily, so you must do that manually.
-
-`nano /etc/containerd/config.toml`, and add the `SystemdCgroup` parameter under the right block:
+Additionally, you need to set the system cgroup for containerd to `systemd`. You can simply
+use the following sed command, to do the necessary change:
 
 ```shell script
-[plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc.options]
-  SystemdCgroup = true
+sed -i 's/SystemdCgroup = false/SystemdCgroup = true/' /etc/containerd/config.toml
 ```
 
 Next baby step - enable required services, and set a new `root` password.
