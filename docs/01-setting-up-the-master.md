@@ -193,7 +193,7 @@ each package.
 ```shell script
 pacstrap /mnt base uboot-raspberrypi linux-aarch64 firmware-raspberrypi raspberrypi-bootloader uboot-tools \ 
 mkinitcpio-systemd-tool python tinyssh busybox btrfs-progs cryptsetup \ 
-sudo openssh dhcpcd openntpd htop lm_sensors nano zsh zsh-completions grml-zsh-config dnsutils \ 
+sudo openssh dhcpcd htop lm_sensors nano zsh zsh-completions grml-zsh-config dnsutils \ 
 containerd cni-plugins conntrack-tools ethtool ebtables socat \ 
 raspberrypi-firmware rpi-eeprom
 ```
@@ -221,14 +221,13 @@ remote LUKS unlocking via tinyssh (don't worry - you can always unlock
 with a keyboard connected to the Pi too, if something goes wrong)
 
 ```
-sudo openssh dhcpcd openntpd htop lm_sensors nano zsh zsh-completions grml-zsh-config dnsutils
+sudo openssh dhcpcd htop lm_sensors nano zsh zsh-completions grml-zsh-config dnsutils
 ```
 
 Personal choice for packages I like. `sudo` allows us to use a dedicated user instead
 of using the root user directly (there is a good reason for that down the line),
 `openssh` server makes administration much easier, and as I use dhcp in my network,
-`dhcpcd` is pretty much required. `openntpd` is a simple implementation of a `ntp`
-sync client, to keep the system clock in sync (the Pi does not have a hardware clock!).
+`dhcpcd` is pretty much required.
 
 The rest of these packages are completely personal choices, and can be substituted at
 will. The rest of the document will assume these however, so adjust as necessary.
@@ -282,6 +281,18 @@ cat >> /etc/hosts <<END
 END
 ```
 
+One small but important change is to enable ntp synchronization via `systemd-timesyncd`.
+This has a small advantage over other solutions such as `ntpd` or `openntpd`: Once synchronized,
+time is also stored in the file system. This is significant, as the Raspberry Pi has no RTC, which effectively
+means that after **each reboot** Pi's have a (sometimes quite long) time period where the system clock is wrong,
+till ntp synchronization is achieved again. `systemd-timesyncd` does not suffer from this, as it uses the
+time _last stored_ in the filesystem on boot (which means time can still drift apart between long shutdown
+times, but shouldn't be much of an issue for quick reboots), till synchronization is achieved again.
+
+```shell script
+timedatectl set-ntp 1
+```
+
 Now is also the time to do some config for Kubernetes and containerd. This could be done
 later, but its convenient to do this in chroot, as the services are not running yet.
 
@@ -325,7 +336,7 @@ writing, I could not come up with a good way to do this easily, so you must do t
 Next baby step - enable required services, and set a new `root` password.
 
 ```shell script
-systemctl enable sshd dhcpcd containerd openntpd
+systemctl enable sshd dhcpcd containerd
 
 chsh --shell $(which zsh)
 passwd root
