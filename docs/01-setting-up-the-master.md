@@ -195,7 +195,7 @@ pacstrap /mnt base uboot-raspberrypi linux-aarch64 firmware-raspberrypi raspberr
 mkinitcpio-systemd-tool python tinyssh busybox btrfs-progs cryptsetup \ 
 sudo openssh dhcpcd htop lm_sensors nano zsh zsh-completions grml-zsh-config dnsutils \ 
 containerd cni-plugins conntrack-tools ethtool ebtables socat \ 
-raspberrypi-firmware rpi-eeprom
+raspberrypi-firmware rpi-eeprom vim
 ```
 
 Let's break down the packages, while they get installed onto your Pi (it may take a
@@ -239,12 +239,13 @@ containerd cni-plugins conntrack-tools ethtool ebtables socat
 These packages are required for Kubernetes (or to be more precise, `kubeadm`) to run. 
 
 ```
-raspberrypi-firmware rpi-eeprom
+raspberrypi-firmware rpi-eeprom vim
 ```
 
-Lastly, these are two optional packages. The former (not to be confused with`firmware-raspberrypi`) contains some handy
-tools, such as `vcgencmd` (see `Update bootloader` paragraph at the top). `rpi-eeprom` contains the actual tools
-to update the firmware (which is stored on the eeprom, hence the name).
+Lastly, these are three (actually two) optional packages. The first (not to be confused with`firmware-raspberrypi`)
+contains some handy tools, such as `vcgencmd` (see `Update bootloader` paragraph at the top). `rpi-eeprom` contains
+the actual tools to update the firmware (which is stored on the eeprom, hence the name). `vim` is required, as it
+contains the `xxd` tool, required for bootloader updates.
 
 ### 3: Configure the system in chroot
 
