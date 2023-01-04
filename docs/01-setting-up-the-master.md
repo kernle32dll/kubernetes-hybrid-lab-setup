@@ -513,6 +513,10 @@ curl -sSL "https://raw.githubusercontent.com/kubernetes/release/${RELEASE_VERSIO
 mkdir -p /etc/systemd/system/kubelet.service.d
 curl -sSL "https://raw.githubusercontent.com/kubernetes/release/${RELEASE_VERSION}/cmd/kubepkg/templates/latest/deb/kubeadm/10-kubeadm.conf" | sed "s:/usr/bin:${DOWNLOAD_DIR}:g" | tee /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
 
+# Enable certificate rotation for kubelet tls serving
+# See https://serverfault.com/a/1082714
+sed -i 's/kubelet\.conf"/kubelet\.conf --rotate-server-certificates=true"/' /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+
 systemctl enable kubelet --now
 
 kubeadm config images pull
