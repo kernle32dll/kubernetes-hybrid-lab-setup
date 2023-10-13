@@ -379,32 +379,19 @@ systemctl enable initrd-shell.service
 systemctl enable initrd-tinysshd.service
 ```
 
-For the remote unlock to work, we need to tell our init what it needs to unlock. This is,
-the second partition. Its good practice to use UUIDs, so that's what we do here:
+For unlocking to work, we need to tell our init what it needs to unlock: The second partition.
+Its good practice to use UUIDs, so that's what we do here:
 
 ```shell script
 SDA_LUKS_UUID=$(lsblk -l -f -n -o UUID /dev/sda2 | head -n 1)
 echo "root    UUID=$SDA_LUKS_UUID   none   luks,discard" > /etc/mkinitcpio-systemd-tool/config/crypttab
 ```
 
-To complete the init config, we need to generate and add a public key. However, we need
-to - again - jump through a few hoops here.
+To complete the init config, we need to generate and add a public key.
 
-The way `systemd-tool` works, it poses a little problem: `systemd-tool` is hardwired to
-both the `root` user, and the root users authorized keys (`/root/.ssh/authorized_keys`).
-This basically means, that anyone able to unlock the system, has (as it stands) the ability
-to gain `root` access. This is probably not desirable.
-
-We will tighten security by disallowing SSH root logins altogether. This is another reason
-why we created a dedicated user - as it is the only way into our system (remotely) then.
-
-```shell script
-echo "PermitRootLogin no" >> /etc/ssh/sshd_config
-```
-
-As we use `tinyssh` for the remote unlock ssh server, as need to use a `ed25519` key. If
-you don't have one or want to use a dedicated one, create it now **on your host system**,
-and `cat` the public key, so we can install it manually on our new system:
+As we use `tinyssh` for remote unlocking ssh server, we need to create a `ed25519` key.
+If you don't have one or want to use a dedicated one, create it now **on your host system**,
+and `cat` the public key, so we can install it on our new system:
 
 ```shell script
 ssh-keygen -t ed25519 -b 4096 -a 100 -f ~/.ssh/ida_ed25519_claystone_master_unlock
@@ -412,16 +399,19 @@ cat ~/.ssh/ida_ed25519_claystone_master_unlock.pub
 ```
 
 Back in our new system, add the public key retrieved from the `cat` command above (your
-output will of course differ to mine) to `/root/.ssh/authorized_keys`:
+output will differ to mine) to `/etc/mkinitcpio-systemd-tool/config/authorized_keys`:
 
 ```shell script
 mkdir -p /root/.ssh
-echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOx49aPqVW9SocPLnAOldDKDOoyiQN8oFS1AYSD9BcuW bgerda@voidlight" >> /root/.ssh/authorized_keys
+echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOx49aPqVW9SocPLnAOldDKDOoyiQN8oFS1AYSD9BcuW bgerda@voidlight" >> /etc/mkinitcpio-systemd-tool/config/authorized_keys
 ```
 
-While you are at it, you might or might not also create and add a public key for the
-`alarm` user. The process is the same, but the authorized keys reside at
-`/home/alarm/.ssh/authorized_keys`. Don't forget the `mkdir` call beforehand.
+This public key can only be used to remotely unlock the Pi, it cannot be used to remotely log into
+the booted and unlocked machine.
+
+If you want this, you might also create and add a public key for the `alarm` user while you are at it.
+The process is the same, but the authorized keys reside at `/home/alarm/.ssh/authorized_keys`.
+Don't forget the `mkdir` call beforehand.
 
 With the public key(s) in place, we ensure that the host keys for our regular SSH server
 are generated. This needs to be done *now* (as opposed to first system start), as these
@@ -447,6 +437,12 @@ sed -i "s/root=PARTUUID=\${uuid}/root=\/dev\/mapper\/root cryptdevice=UUID=\${uu
 
 cd /boot
 ./mkscr
+```
+
+For a final touch, we will tighten security by disallowing SSH root logins altogether, as we created a dedicated user.
+
+```shell script
+echo "PermitRootLogin no" >> /etc/ssh/sshd_config
 ```
 
 The base system is now configured. You can now shutdown the Pi, and switch to the SD
