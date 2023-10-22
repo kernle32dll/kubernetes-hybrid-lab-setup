@@ -195,14 +195,14 @@ pacstrap /mnt base uboot-raspberrypi linux-aarch64 firmware-raspberrypi raspberr
 mkinitcpio-systemd-tool python tinyssh busybox btrfs-progs cryptsetup \ 
 sudo openssh dhcpcd htop lm_sensors nano zsh zsh-completions grml-zsh-config dnsutils \ 
 containerd cni-plugins conntrack-tools ethtool ebtables socat \ 
-raspberrypi-firmware rpi-eeprom vim
+raspberrypi-utils rpi-eeprom vim
 ```
 
 Let's break down the packages, while they get installed onto your Pi (it may take a
 good while):
 
 ```
-base raspberrypi-firmware uboot-raspberrypi linux-aarch64 firmware-raspberrypi raspberrypi-bootloader uboot-tools
+base uboot-raspberrypi linux-aarch64 firmware-raspberrypi raspberrypi-bootloader uboot-tools
 ```
 
 These are the base files, which are always required. Kudos to `ptanmay143` for
@@ -210,7 +210,7 @@ These are the base files, which are always required. Kudos to `ptanmay143` for
 `uboot-tools` is required for regenerating the U-Boot bootloader down the line.
 
 Note, that we are using the mainline kernel `linux-aarch64`, and not the Raspberry Pi
-specific kernel `linux-raspberrypi4`.
+specific kernel `linux-rpi`.
 
 ```
 mkinitcpio-systemd-tool python tinyssh busybox btrfs-progs cryptsetup
@@ -239,11 +239,11 @@ containerd cni-plugins conntrack-tools ethtool ebtables socat
 These packages are required for Kubernetes (or to be more precise, `kubeadm`) to run. 
 
 ```
-raspberrypi-firmware rpi-eeprom vim
+raspberrypi-utils rpi4-eeprom vim
 ```
 
 Lastly, these are three (actually two) optional packages. The first (not to be confused with`firmware-raspberrypi`)
-contains some handy tools, such as `vcgencmd` (see `Update bootloader` paragraph at the top). `rpi-eeprom` contains
+contains some handy tools, such as `vcgencmd` (see `Update bootloader` paragraph at the top). `rpi4-eeprom` contains
 the actual tools to update the firmware (which is stored on the eeprom, hence the name). `vim` is required, as it
 contains the `xxd` tool, required for bootloader updates.
 
@@ -602,7 +602,7 @@ that you have adequate cooling before continuing!
 
 **Disclaimer**: Overclocking is on you - I don't take any responsibility for any damages done!
 
-If you have not installed the `raspberrypi-firmware` package during pacstrap time - now is the time.
+If you have not installed the `raspberrypi-utils` package during pacstrap time - now is the time.
 
 When installed, you get (amongst other things) access to the `vcgencmd` command, which allows you to inspect properties
 about the Pi. The two most interesting commands are as follows:
