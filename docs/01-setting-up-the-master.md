@@ -195,7 +195,7 @@ pacstrap /mnt base uboot-raspberrypi linux-aarch64 firmware-raspberrypi raspberr
 mkinitcpio-systemd-tool python tinyssh busybox btrfs-progs cryptsetup \ 
 sudo openssh dhcpcd htop lm_sensors nano zsh zsh-completions grml-zsh-config dnsutils \ 
 containerd cni-plugins conntrack-tools ethtool ebtables socat \ 
-raspberrypi-utils rpi-eeprom vim
+raspberrypi-utils rpi4-eeprom vim
 ```
 
 Let's break down the packages, while they get installed onto your Pi (it may take a
