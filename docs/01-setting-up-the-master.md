@@ -518,10 +518,10 @@ Finally, we are ready to create our cluster, and do some preliminary configurati
 
 ```shell script
 cat > k8s-init-config.cfg <<END
-apiVersion: kubeadm.k8s.io/v1beta2
+apiVersion: kubeadm.k8s.io/v1beta3
 kind: InitConfiguration
 ---
-apiVersion: kubeadm.k8s.io/v1beta2
+apiVersion: kubeadm.k8s.io/v1beta3
 kind: ClusterConfiguration
 controlPlaneEndpoint: claystone-master1
 networking:
