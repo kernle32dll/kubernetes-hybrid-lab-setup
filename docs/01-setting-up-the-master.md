@@ -402,7 +402,7 @@ Back in our new system, add the public key retrieved from the `cat` command abov
 output will differ to mine) to `/etc/mkinitcpio-systemd-tool/config/authorized_keys`:
 
 ```shell script
-mkdir -p /root/.ssh
+mkdir -p /etc/mkinitcpio-systemd-tool/config/
 echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOx49aPqVW9SocPLnAOldDKDOoyiQN8oFS1AYSD9BcuW bgerda@voidlight" >> /etc/mkinitcpio-systemd-tool/config/authorized_keys
 ```
 
