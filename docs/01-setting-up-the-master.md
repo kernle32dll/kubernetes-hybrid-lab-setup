@@ -191,7 +191,7 @@ the result is very rewarding, as we can install and customize the system down to
 each package.
 
 ```shell script
-pacstrap /mnt base uboot-raspberrypi linux-aarch64 firmware-raspberrypi raspberrypi-bootloader uboot-tools \ 
+pacstrap /mnt base linux-rpi firmware-raspberrypi raspberrypi-bootloader \ 
 mkinitcpio-systemd-tool python tinyssh busybox btrfs-progs cryptsetup \ 
 sudo openssh dhcpcd htop lm_sensors nano zsh zsh-completions grml-zsh-config dnsutils \ 
 containerd cni-plugins conntrack-tools ethtool ebtables socat \ 
@@ -202,15 +202,25 @@ Let's break down the packages, while they get installed onto your Pi (it may tak
 good while):
 
 ```
-base uboot-raspberrypi linux-aarch64 firmware-raspberrypi raspberrypi-bootloader uboot-tools
+base raspberrypi-firmware linux-rpi firmware-raspberrypi raspberrypi-bootloader
 ```
 
 These are the base files, which are always required. Kudos to `ptanmay143` for
 [figuring these out](https://www.reddit.com/r/archlinuxarm/comments/harxbk/how_to_build_archlinuxarm_rpi3_tarballs/fv8loy2/).
-`uboot-tools` is required for regenerating the U-Boot bootloader down the line.
+However, contrary to the setup of `ptanmay143`, I opted for a setup without U-Boot.
+There is nothing inherently wrong with U-Boot, but since the mainline Kernel can now
+be booted by the Raspberry Pi Bootloader (more or less) directly, I wanted to simplify
+the boot process a bit. Also, forgoing U-Boot means that the very good documented and
+well understood `cmd.txt` and `config.txt` files can be used for the boot process.
+More on these files later.
 
-Note, that we are using the mainline kernel `linux-aarch64`, and not the Raspberry Pi
-specific kernel `linux-rpi`.
+Note, that we are using the Raspberry Pi patched Kernel `linux-rpi`, and not the mainline 
+Kernel `linux-aarch64`.
+Since all the important functionality has landed in the mainline Kernel, it makes no difference
+which Kernel to use for the most part.
+However, at the time of writing the `linux-aarch64` package has not been updated for a very
+long time.
+Hence, I opted for the `linux-rpi` package.
 
 ```
 mkinitcpio-systemd-tool python tinyssh busybox btrfs-progs cryptsetup
@@ -429,14 +439,38 @@ firmwares - this is completely normal, and can be ignored on the Pi.
 mkinitcpio -P
 ```
 
-The final step is to adjust the U-Boot config to point to the unlocked root partition,
-and regenerate the `scr` file (note: This **needs** to be done inside `/boot`).
+The final step is to write the `cmd.txt` and `config.txt` files.
+The former is the actual Kernel command line, the `config.txt` is used to configure the Pi hardware.
 
-```shell script
-sed -i "s/root=PARTUUID=\${uuid}/root=\/dev\/mapper\/root cryptdevice=UUID=\${uuid}:root rootfstype=btrfs rootflags=subvol=@,compress=lzo/" /boot/boot.txt
+```shell
+cat <<EOF | tee /boot/cmd.txt
+cgroup_enable=cpuset cgroup_enable=memory cryptdevice=UUID=$SDA_LUKS_UUID:root:allow-discards root=/dev/mapper/root rootflags=subvol=@,compress=lzo rw
+EOF
+```
 
-cd /boot
-./mkscr
+The `cryptdevice` parameter points to our encrypted partition, and the parameters after that correctly
+set up the initial root with that.
+The cgroup parameters ensure that required cgroups for Kubernetes to run are enabled.
+For me, some of them were not enabled on the Raspberry Pi `linux-rpi` Kernel.
+
+```shell
+cat <<EOF | tee /boot/config.txt
+# initramfs path
+initramfs initramfs-linux.img followkernel
+
+# Enable 64bit mode
+arm_64bit=1
+
+# Run as fast as firmware / board allows
+arm_boost=1
+EOF
+```
+
+Note, if you use the `linux-aarch64` Kernel, you need to execute the following commands as well:
+
+```shell
+echo "device_tree=dtbs/broadcom/bcm2711-rpi-4-b.dtb" > /boot/config.txt
+echo "kernel=Image" > /boot/config.txt
 ```
 
 For a final touch, we will tighten security by disallowing SSH root logins altogether, as we created a dedicated user.
